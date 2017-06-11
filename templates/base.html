@@ -1,0 +1,16 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    <h1>Base.html</h1>
+    <hr>
+    <div name="top-level-nav"><h2>This is where the nav bar goes</h2></div>
+    {% block content %}{% endblock %}
+    <hr>
+    {% block footer %}
+    <p>Thanks for visiting my site.</p>
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+</head>
+
+{% extends "base.html" %}
+
+{% block title %}<h1>Welcome to thezhongfamily.com. The site is finally live.</h1>{% endblock %}
+
+{% block content %}
+<body>
+<h1>List of projects in active development:</h1>
+<ul>
+    <li><a href="/catan/">Settlers of Catan</a></li>
+    <li><a href="/people/">Family Wall</a></li>
+</ul>
+</body>
+{% endblock %}
+
+{% block footer %}
+<h3>This footer from catan.html overrides the default footer?</h3>
+{% endblock %}
+
+
+</html>

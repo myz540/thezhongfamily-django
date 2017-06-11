@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Catan Index</title>
+</head>
+
+{% extends "base.html" %}
+
+{% block title %}<h1>Catan Index from block title</h1>{% endblock %}
+
+{% block content %}
+<body>
+<h1>Catan Index from block content</h1>
+<h2>context: {{ var }}</h2>
+</body>
+{% endblock %}
+
+{% block footer %}
+<h3>This footer from catan.html overrides the default footer?</h3>
+{% endblock %}
+
+
+</html>

@@ -1,0 +1,16 @@
+branch-defaults:
+  default:
+    environment: thezhongfamily-dev
+global:
+  application_name: thezhongfamily
+  branch: null
+  default_ec2_keyname: mikezhong-home
+  default_platform: Python 3.4
+  default_region: us-east-1
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: eb-cli
+  repository: null
+  sc: null
+  workspace_type: Application
