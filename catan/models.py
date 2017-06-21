@@ -12,7 +12,7 @@ class Player(models.Model):
     stone = models.IntegerField()
     # roads, settlements, and cities are map via foreign keys from Edge and Vertex models
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s with %d victory points" % (self.name, self.victory_points)
 
 
@@ -38,7 +38,7 @@ class Tile(models.Model):
     edge = models.ManyToManyField(Edge)
     vertex = models.ManyToManyField(Vertex)
 
-    def __unicode__(self):
+    def __str__(self):
         return u"A %s tile" % self.resource_type
 
 

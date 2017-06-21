@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>People Index</title>
+</head>
+
+{% extends "base.html" %}
+
+{% block title %}<h1>People Index from block title</h1>{% endblock %}
+
+{% block content %}
+<body>
+<h1>People Index from block content</h1>
+<div class="app_links">
+    Links:
+    <ul>
+        <li><a href="/people/wall/">The Wall</a></li>
+    </ul>
+</div>
+</body>
+{% endblock %}
+
+{% block footer %}
+<h3>This footer from people.html overrides the default footer?</h3>
+{% endblock %}
+
+
+</html>

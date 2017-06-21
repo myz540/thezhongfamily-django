@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Wall</title>
+</head>
+
+{% extends "base.html" %}
+
+{% block title %}
+<h1>The Wall</h1>
+<h2>Feel free to leave your comments. 512 characters allowed per comment.{% endblock %}
+
+{% block content %}
+<body>
+<h1>Wall:</h1>
+<div class="wall">
+    <h2> Recent Posts: </h2>
+    {% if recent_postings %}
+    {% for post in recent_postings %}
+    <p> {{ post.poster_name }} posted at {{ post.post_dt }} :</p>
+    <p> {{ post.post_content }} </p>
+    <br />
+    {% endfor %}
+    {% else %}
+    <p>No Recent Posts</p>
+    {% endif %}
+</div>
+<hr />
+<form action="" method="post">
+    {% csrf_token %}
+    <h2>Submit a post:</h2>
+    Name: <input type="text" name="poster_name"><br />
+    Comment: <textarea name="post_content" rows="5" cols="40"></textarea><br />
+    <input type="submit">
+</form>
+</body>
+{% endblock %}
+</html>
