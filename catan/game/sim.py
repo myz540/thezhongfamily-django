@@ -1,7 +1,9 @@
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "thezhongfamily.settings")
 import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "thezhongfamily.settings")
 django.setup()
+
+import joblib
 
 import catan.models as catan
 import random
@@ -15,6 +17,8 @@ class Game():
             "Game() constructor called in sim mode"
             self.players = []
             self.tiles = []
+            self.vertices = []
+            self.edges = []
             self.resources = None
             self.winner = False
             self.initialized = False
@@ -26,21 +30,27 @@ class Game():
     def initialize(self):
         # create four player models
         for i in range(1,5):
-            self.players.append(catan.Player(name="Player %d" % i, victory_points=0,
+            self.players.append(catan.Player(id=i, name="Player %d" % i, victory_points=0,
                                              brick=0, wood=0, wheat=0, sheep=0, stone=0))
 
         # create 19 tiles, allocate resource type and dice values
         random.shuffle(resource_vals)
         random.shuffle(resources)
         for i in range(18):
-            self.tiles.append(catan.Tile(resource_type=resources[i],
+            self.tiles.append(catan.Tile(id=i, resource_type=resources[i],
                                          dice_value=resource_vals[i]))
-        self.tiles.append(catan.Tile(resource_type=u"desert",
+        self.tiles.append(catan.Tile(id=18, resource_type=u"desert",
                                      dice_value=7))
+
         # create vertices
+        for i in range(1,56):
+            self.vertices.append(catan.Vertex(id=i, available=True, has_city=False))
 
         # create edges
+        for i in range(1,73):
+            self.edges.append(catan.Edge(id=i, available=True))
 
+        # SAVE PLAYERS, TILES, EDGES, AND VERTICES
         print(len(self.players), len(self.tiles))
         for player in self.players:
             print("Saving player %s" % player.name)
@@ -49,6 +59,13 @@ class Game():
         for tile in self.tiles:
             print("Saving tile of resource %s, dice val %d" % (tile.resource_type, tile.dice_value))
             tile.save()
+
+        for edge in self.edges:
+            edge.save()
+
+        for vertex in self.vertices:
+            vertex.save()
+
 
         self.initialized = True
 
@@ -121,11 +138,16 @@ class Game():
         self.board[47, 51] = 66
         self.board[48, 52] = 67
         self.board[49, 52] = 68
-        self.board[]
+        self.board[49, 53] = 69
+        self.board[50, 53] = 70
+        self.board[50, 54] = 71
+        self.board[51, 54] = 72
 
         self.board += self.board.transpose()
 
-
+    def assign_tiles(self):
+        for i, tile in enumerate(self.tiles):
+            print(i, tile)
 
     def roll_dice(self):
         return random.randint(1,6) + random.randint(1,6)
@@ -149,7 +171,6 @@ class Game():
         raise NotImplementedError
 
 
-
 if __name__ == "__main__":
     resources = [u"brick", u"brick", u"brick",
                  u"wood", u"wood", u"wood", u"wood",
@@ -159,13 +180,16 @@ if __name__ == "__main__":
 
     resource_vals = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
     print(len(resource_vals), len(resources))
+
     sim = Game()
     if not sim.initialized:
         sim.initialize()
+        sim.init_board()
+        print(sim.board.shape)
 
     turn = 0
 
-    print(sim.board.shape)
+    sim.assign_tiles()
 
     while sim.winner == False:
         #sim.winner = True

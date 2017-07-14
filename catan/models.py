@@ -3,6 +3,7 @@ from django.db import models
 
 # Create your models here.
 class Player(models.Model):
+    id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=32)
     victory_points = models.IntegerField()
     brick = models.IntegerField()
@@ -17,17 +18,20 @@ class Player(models.Model):
 
 
 class Edge(models.Model):
+    id = models.IntegerField(primary_key=True)
     available = models.BooleanField()
     road = models.ForeignKey(Player, null=True)
 
 
 class Vertex(models.Model):
+    id = models.IntegerField(primary_key=True)
     available = models.BooleanField()
     settlement = models.ForeignKey(Player, null=True)
     has_city = models.BooleanField()
 
 
 class Tile(models.Model):
+    id = models.IntegerField(primary_key=True)
     resource_type = models.CharField(max_length=8)
     dice_value = models.IntegerField()
     has_robber = models.BooleanField(default=False)
