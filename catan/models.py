@@ -22,12 +22,18 @@ class Edge(models.Model):
     available = models.BooleanField()
     road = models.ForeignKey(Player, null=True)
 
+    def __str__(self):
+        return u"I am edge %d" % self.id
+
 
 class Vertex(models.Model):
     id = models.IntegerField(primary_key=True)
     available = models.BooleanField()
     settlement = models.ForeignKey(Player, null=True)
     has_city = models.BooleanField()
+
+    def __str__(self):
+        return u"I am vertex %d" % self.id
 
 
 class Tile(models.Model):
@@ -43,7 +49,7 @@ class Tile(models.Model):
     vertex = models.ManyToManyField(Vertex)
 
     def __str__(self):
-        return u"A %s tile" % self.resource_type
+        return u"I am tile %d and I am a %s tile" % (self.id, self.resource_type)
 
 
 class Resource(models.Model):

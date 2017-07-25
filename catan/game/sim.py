@@ -33,6 +33,14 @@ class Game():
             self.players.append(catan.Player(id=i, name="Player %d" % i, victory_points=0,
                                              brick=0, wood=0, wheat=0, sheep=0, stone=0))
 
+        # create vertices
+        for i in range(1,55):
+            self.vertices.append(catan.Vertex(id=i, available=True, has_city=False))
+
+        # create edges
+        for i in range(1,73):
+            self.edges.append(catan.Edge(id=i, available=True))
+
         # create 19 tiles, allocate resource type and dice values
         random.shuffle(resource_vals)
         random.shuffle(resources)
@@ -42,13 +50,9 @@ class Game():
         self.tiles.append(catan.Tile(id=18, resource_type=u"desert",
                                      dice_value=7))
 
-        # create vertices
-        for i in range(1,56):
-            self.vertices.append(catan.Vertex(id=i, available=True, has_city=False))
+        self.tiles[0].vertex.add(self.vertices[0])
 
-        # create edges
-        for i in range(1,73):
-            self.edges.append(catan.Edge(id=i, available=True))
+        self.tiles[0].vertices.add
 
         # SAVE PLAYERS, TILES, EDGES, AND VERTICES
         print(len(self.players), len(self.tiles))
