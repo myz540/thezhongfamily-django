@@ -21,6 +21,7 @@ class Game():
             self.edges = []
             self.resources = None
             self.winner = False
+            self.winning_player = None
             self.initialized = False
             self.board = np.zeros((54, 54))
             self.turn = 0
@@ -46,7 +47,10 @@ class Game():
         # Initialize connectivity of edges and vertices
         self.init_board()
 
-        # Assign everyone's first settlement and give 2 of each resource
+        # Save game, AKA create/update database
+        self.save_game()
+
+        # Assign everyone's first settlement and give 4 of each resource
         self.start_location_and_resources()
 
         # Save game, AKA create/update database
@@ -234,21 +238,29 @@ class Game():
         print("init_board() done")
 
     def start_location_and_resources(self):
+        """
+        Allocate 1 settlement and 1 road for each player to start the game. Also gives each player
+        3 of each resource to start. This function is only called during initialization
+        """
+        print("start_location_and_resources() called")
+
         for player in self.players:
-            player.brick += 2
-            player.wood += 2
-            player.wheat += 2
-            player.sheep += 2
-            player.stone += 2
+            player.brick += 4
+            player.wood += 4
+            player.wheat += 4
+            player.sheep += 4
+            player.stone += 4
 
         self.assign_vertex(12, self.players[0])
         self.assign_edge(12, self.players[0])
         self.assign_vertex(14, self.players[1])
-        self.assign_edge(15, self.players[0])
-        self.assign_vertex(39, self.players[1])
-        self.assign_edge(36, self.players[0])
-        self.assign_vertex(41, self.players[1])
-        self.assign_edge(59, self.players[0])
+        self.assign_edge(15, self.players[1])
+        self.assign_vertex(39, self.players[2])
+        self.assign_edge(36, self.players[2])
+        self.assign_vertex(41, self.players[3])
+        self.assign_edge(59, self.players[3])
+
+        print("start_location_and_resources() done")
 
     def save_game(self):
         """
@@ -301,24 +313,63 @@ class Game():
         joblib.load("save_game.pkl")
         print("unpickle() done")
 
-    #ToDO Implement function, if player builds settlement, call this function on that vertex number
-    #ToDO Function can also be used to assign tiles initially
     def assign_vertex(self, vertex_id, player):
+        """
+        Functional equivalent of a player building a settlement on a vertex
+        Resources are deducted from the player
+        Vertex and all neighboring vertices are made unavailable
+        1 victory point is given to the player
+        :param vertex_id: ID of the vertex model to be claimed
+        :param player: player model building the settlement
+        """
+        print("assign_vertex() called, assigning vertex", vertex_id, "to Player", player.id)
+
+        # assign vertex to player and give victory point
         player.vertex_set.add(self.vertices[vertex_id])
+        player.victory_points += 1
+
+        # make vertex and neighboring vertices unavailable
         self.vertices[vertex_id].available = False
-        #ToDO make neighboring vertices unavailable too
+        vertex_slice = self.board[vertex_id, :]
+        neighbor_vertex_ids = np.where(vertex_slice != 0)
+        for v_id in neighbor_vertex_ids[0]:
+            print("making neighbor vertex", v_id, "unavailable")
+            self.vertices[v_id].available = False
+
+        # deduct resources
+        player.brick -= 1
+        player.wood -= 1
+        player.wheat -= 1
+        player.sheep -=1
+
+        print("assign_vertex() done")
 
     def assign_edge(self, edge_id, player):
+        """
+        Functional equivalent of a player building a road on an edge
+        Resources are deducted from the player
+        Edge is made unavailable
+        :param edge_id: ID of the edge model to be claimed
+        :param player: player model building the road
+        """
+        print("assign_edge() called, assigning edge", edge_id, "to Player", player.id)
+
         player.edge_set.add(self.edges[edge_id])
         self.edges[edge_id].available = False
+        player.brick -= 1
+        player.wood -= 1
+
+        print("assign_edge() done")
 
     def roll_dice(self):
         return random.randint(1,6) + random.randint(1,6)
 
     def start_turn(self):
-        """Simulate the dice roll and allocate resources to all players.
+        """
+        Simulate the dice roll and allocate resources to all players.
         Allow the current player to build roads, settlements, and cities as desired.
-        Will eventually implement trading functionality"""
+        Will eventually implement trading functionality and dev cards
+        """
         print("start_turn() called")
 
         print("Current player's turn:", self.turn)
@@ -345,17 +396,35 @@ class Game():
         else:
             print("Invalid choice, ending your turn to punish you")
 
-        print("Ending turn")
+        if self.players[self.turn].victory_points >= 10:
+            self.winner = True
+            print("***We Have A Winner***")
+            print("***Congrats Player", self.players[self.turn].id, "***")
+            exit(0)
+
+        self.save_game()
+
+        print("start_turn() done")
 
     def _build(self):
+        """
+        Heavy lifting function which prompts players to make a build selection.
+        All options other than pass (p) will result in a non-zero build_flag which will simply prompt
+        another call to _build. This allows players to build multiple things per turn.
+        This function checks player resources for the thing to be built. If adequate, the function makes calls
+        to assign_edge and assign_vertex depending on if a road or settlement is being built.
+        If a city is being built, this function handles that by giving the player a victory point and changing
+        the has_city attribute of the vertex to True.
+        :return:
+        """
+        print("_build called")
 
         build_flag = 1
-        build_choice = input("What would you like to build? road (r), settlement (s), city (c)")
+        build_choice = input("What would you like to build? road (r), settlement (s), city (c), pass (p)")
 
         # for each option display list of possible build locations as per game rules
         # check if resources are available for the build
         # update victory points if needed
-        #ToDO check resources
         #ToDo make sure it fucking works
         if build_choice == 'r':
             player = self.players[self.turn]
@@ -370,57 +439,120 @@ class Game():
                 print("List of possible road locations: ")
                 for location in locations:
                     print(location, type(location))
-                location_choice = input("Where would you like to build a road?")
+                location_choice = int(input("Where would you like to build a road?"))
                 while location_choice not in locations:
                     print("Invalid location")
-                    location_choice = input("Where would you like to build a road?")
-                else:
-                    self.assign_edge(int(location_choice))
+                    location_choice = int(input("Where would you like to build a road?"))
+                # assign edge/road to player
+                self.assign_edge(location_choice, player)
 
         elif build_choice == 's':
             player = self.players[self.turn]
-            locations = [vertex for vertex in self.vertices if vertex.available]
-            print("List of possible settlement locations: ")
-            for location in locations:
-                print(location)
-            location_choice = input("Where would you like to build a settlement?")
-            while location_choice not in locations:
-                print("Invalid location")
-                location_choice = input("Where would you like to build a settlement?")
+
+            # check player resources are adequate
+            if player.brick < 1 or player.wood < 1 or player.wheat < 1 or player.sheep < 1:
+                print("Not enough resources to build a settlement")
+                build_flag = 2
+
+            # generate list of available vertices
             else:
-                self.assign_vertex(int(location_choice))
+                locations = [vertex.id for vertex in self.vertices if vertex.available]
+                print("List of possible settlement locations: ")
+                for location in locations:
+                    print(location)
+                # prompt user for build location
+                location_choice = int(input("Where would you like to build a settlement?"))
+                while location_choice not in locations:
+                    print("Invalid location")
+                    location_choice = int(input("Where would you like to build a settlement?"))
+
+                # assign vertex/settlement to player
+                self.assign_vertex(location_choice, player)
 
         elif build_choice == 'c':
             player = self.players[self.turn]
-            locations = list(player.vertex_set.filter(has_city=False))
-            for location in locations:
-                print(location)
-            location_choice = input("Where would you like to upgrade to a city?")
-            while location_choice not in locations:
-                print("Invalid location")
-                location_choice = input("Where would you like to upgrade to a city?")
-            else:
-                self.vertices[int(location_choice)].has_city = True
+            if player.wheat < 2 or player.stone < 3:
+                print("Not enough resources to build a city")
+                build_flag = 2
 
+            else:
+                locations = [vertex.id for vertex in player.vertex_set.filter(has_city=False)]
+                for location in locations:
+                    print(location)
+                location_choice = int(input("Where would you like to upgrade to a city?"))
+                while location_choice not in locations:
+                    print("Invalid location")
+                    location_choice = input("Where would you like to upgrade to a city?")
+                else:
+                    self.vertices[location_choice].has_city = True
+                    player.victory_points += 1
+                    print("Player", player.id, "upgraded settlement", location_choice, "to a city")
+
+        elif build_choice == 'p':
+            build_flag = 0
+
+        print("_build() done. Returning with flag", build_flag)
         return build_flag
 
     def move_robber(self):
         print("Not implemented")
 
     def distribute_resources(self, roll):
-        print("Not implemented")
-        # Get a list of all vertices that have a settlement not null
-        for player in self.players:
-            player_vertices = player.vertex_set.all()
+        """
+        Given a dice roll value, will find all tiles that have that dice value,
+        then find all vertices which have a settlement. For each vertex with settlement,
+        a helper function _pay_player is called with the player, resource_type, and has_city
+        as arguments
+        :param roll: integer value of dice roll (2-12)
+        """
+        print("distribute_resources() called")
 
-            for vertex in player_vertices:
-                pass
+        # find all tiles with the dice value
+        active_tiles = [tile for tile in self.tiles if tile.dice_value == roll]
 
+        for tile in active_tiles:
+            resource_type = tile.resource_type
+            active_vertices = [vertex for vertex in tile.vertex.all() if vertex.settlement is not None]
 
+            for vertex in active_vertices:
+                player = vertex.settlement
+                self._pay_player(player, resource_type, vertex.has_city)
 
-        # For each vertex, get the player_id from settlement and all tiles that own the vertex
-        # Increment that player_id resource count, if has_city is True, double it
-        # Save
+        print("distribute_resources() done")
+
+    def _pay_player(self, player, resource_type, has_city):
+        """
+        Helper function which assigns resources to players based on the resource type
+        and absence/presence of city. This function does not verify that the player owns
+        a given vertex and it is up to the calling function to make those checks
+        :param player: Player model to give resources
+        :param resource_type: String variable denoting resource type of the tile
+        :param has_city: Boolean variable denoting whether or not there is a city
+        """
+        #print("_pay_player() called")
+
+        if has_city:
+            multiplier = 2
+        else:
+            multiplier = 1
+
+        if resource_type == "brick":
+            player.brick += multiplier
+        elif resource_type == "wood":
+            player.wood += multiplier
+        elif resource_type == "wheat":
+            player.wheat += multiplier
+        elif resource_type == "sheep":
+            player.sheep += multiplier
+        elif resource_type == "stone":
+            player.stone += multiplier
+        else:
+            print("Invalid resource_type specified")
+
+        print("Player ", player.id, " gets ", multiplier, resource_type)
+
+        #print("_pay_player() done")
+
 
 if __name__ == "__main__":
 

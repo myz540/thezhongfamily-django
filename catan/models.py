@@ -29,7 +29,7 @@ class Edge(models.Model):
 class Vertex(models.Model):
     id = models.IntegerField(primary_key=True)
     available = models.BooleanField(default=True)
-    settlement = models.ForeignKey(Player, null=True)
+    settlement = models.ForeignKey(Player, null=True, default=None)
     has_city = models.BooleanField(default=False)
 
     def __str__(self):
