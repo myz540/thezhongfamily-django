@@ -19,7 +19,7 @@ class Player(models.Model):
 
 class Edge(models.Model):
     id = models.IntegerField(primary_key=True)
-    available = models.BooleanField()
+    available = models.BooleanField(default=True)
     road = models.ForeignKey(Player, null=True)
 
     def __str__(self):
@@ -28,9 +28,9 @@ class Edge(models.Model):
 
 class Vertex(models.Model):
     id = models.IntegerField(primary_key=True)
-    available = models.BooleanField()
+    available = models.BooleanField(default=True)
     settlement = models.ForeignKey(Player, null=True)
-    has_city = models.BooleanField()
+    has_city = models.BooleanField(default=False)
 
     def __str__(self):
         return u"I am vertex %d" % self.id

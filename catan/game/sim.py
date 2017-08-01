@@ -30,16 +30,48 @@ class Game():
             pass
 
     def initialize(self):
+        """
+
+        """
+        print("initialize() called")
+
+        # create players, edges, vertices, and tiles
+        self.create_models()
+
+        print(len(self.players), len(self.tiles), len(self.edges), len(self.vertices))
+
+        # Assign 6 vertices and 6 edges to each tile
+        self.init_tiles()
+
+        # Initialize connectivity of edges and vertices
+        self.init_board()
+
+        # Assign everyone's first settlement and give 2 of each resource
+        self.start_location_and_resources()
+
+        # Save game, AKA create/update database
+        self.save_game()
+
+        print("initialize() done")
+
+    def create_models(self):
+        """
+        Instantiate player, edge, vertex, and tile models that compose the game
+        All models are stored in lists and the id of the model matches the index of
+        the object in the list
+        """
+        print("create_models() called")
+
         # create four player models
         for i in range(4):
             self.players.append(catan.Player(id=i, name="Player %d" % i, victory_points=0,
                                              brick=0, wood=0, wheat=0, sheep=0, stone=0))
 
-        # create 53 vertices
+        # create 54 vertices
         for i in range(54):
             self.vertices.append(catan.Vertex(id=i, available=True, has_city=False))
 
-        # create 71 edges
+        # create 72 edges
         for i in range(72):
             self.edges.append(catan.Edge(id=i, available=True))
 
@@ -52,30 +84,79 @@ class Game():
         self.tiles.append(catan.Tile(id=18, resource_type=u"desert",
                                      dice_value=7))
 
-        #ToDo ADD ALL VERTICES AND EDGES TO EACH TILE
-        self.tiles[0].vertex.add(self.vertices[0])
+        print("create_models() done")
 
+    def init_tiles(self):
+        """
+        j_vertex and j_edge are 19 element lists, where each element is a list
+        containing the index of the edge or tile that composes the tile. A many-to-many relationship
+        is created here. Django many-to-many relationships allow lookups across relations
+        so given a tile, I can check all its availabilities and who owns what.
+        NOTHING IS SAVED THOUGH UNTIL the save_game() function is called
+        """
+        print("init_tiles() called")
 
-        # SAVE PLAYERS, TILES, EDGES, AND VERTICES
-        print(len(self.players), len(self.tiles))
-        for player in self.players:
-            print("Saving player %s" % player.name)
-            player.save()
+        # contains lists of the tile and edge id's that belong to each tile
+        j_vertex = [
+                    [0, 3, 4, 7, 8, 12],
+                    [1, 4, 5, 8, 9, 13],
+                    [2, 5, 6, 9, 10, 14],
+                    [7, 11, 12, 16, 17, 22],
+                    [8, 12, 13, 17, 18, 23],
+                    [9, 13, 16, 18, 19, 24],
+                    [10, 14, 15, 19, 20, 25],
+                    [16, 21, 22, 27, 28, 33],
+                    [17, 22, 23, 28, 29, 34],
+                    [18, 23, 24, 29, 30, 35],
+                    [19, 24, 25, 30, 31, 36],
+                    [20, 25, 26, 31, 32, 37],
+                    [28, 33, 34, 38, 39, 43],
+                    [29, 34, 35, 39, 40, 44],
+                    [30, 35, 36, 40, 41, 45],
+                    [31, 36, 37, 41, 42, 46],
+                    [39, 43, 44, 47, 48, 51],
+                    [40, 44, 45, 48, 49, 52],
+                    [41, 45, 46, 49, 50, 53],
+                    ]
+        j_edge = [
+                  [0, 1, 6, 7, 11, 12],
+                  [2, 3, 7, 8, 13, 14],
+                  [4, 5, 8, 9, 15, 16],
+                  [10, 11, 18, 19, 24, 25],
+                  [12, 13, 19, 20, 26, 27],
+                  [14, 15, 20, 21, 28, 29],
+                  [16, 17, 21, 22, 30, 31],
+                  [23, 24, 33, 34, 39, 40],
+                  [25, 26, 34, 35, 41, 42],
+                  [27, 28, 35, 36, 43, 44],
+                  [29, 30, 36, 37, 45, 46],
+                  [31, 32, 37, 38, 47, 48],
+                  [40, 41, 49, 50, 64, 55],
+                  [42, 43, 50, 51, 56, 57],
+                  [44, 45, 51, 52, 58, 59],
+                  [46, 47, 52, 53, 60, 61],
+                  [55, 56, 62, 63, 66, 67],
+                  [57, 58, 63, 64, 68, 69],
+                  [59, 60, 64, 65, 70, 71],
+                  ]
 
-        for tile in self.tiles:
-            print("Saving tile of resource %s, dice val %d" % (tile.resource_type, tile.dice_value))
-            tile.save()
+        # Each tile has 6 edges and 6 vertices
+        for i in range(18):
+            for v, e in zip(j_vertex[i], j_edge[i]):
+                #print(v, e)
+                self.tiles[i].vertex.add(self.vertices[v])
+                self.tiles[i].edge.add(self.edges[e])
 
-        for edge in self.edges:
-            edge.save()
-
-        for vertex in self.vertices:
-            vertex.save()
-
-        self.initialized = True
-
+        print("init_tiles() done")
 
     def init_board(self):
+        """
+        Populate matrix mapping edge and vertex connectivity
+        Vertex id's are along the rows and columns. A '0' entry at (i, j) indicates
+        vertices i and j are not connected. Any other entry at (i, j) indicates that
+        i and j are connected by edge with id = entry value
+        """
+        print("init_board() called")
         self.board[0, 3] = 0
         self.board[0, 4] = 1
         self.board[1, 4] = 2
@@ -86,35 +167,35 @@ class Game():
         self.board[4, 8] = 7
         self.board[5, 9] = 8
         self.board[6, 10] = 9
-        self.board[7, 12] = 10
-        self.board[8, 12] = 11
-        self.board[8, 13] = 12
-        self.board[9, 13] = 13
-        self.board[9, 14] = 14
-        self.board[10, 14] = 15
-        self.board[7, 11] = 16
+        self.board[7, 11] = 10
+        self.board[7, 12] = 11
+        self.board[8, 12] = 12
+        self.board[8, 13] = 13
+        self.board[9, 13] = 14
+        self.board[9, 14] = 15
+        self.board[10, 14] = 16
         self.board[10, 15] = 17
         self.board[11, 16] = 18
-        self.board[11, 17] = 19
-        self.board[12, 17] = 20
+        self.board[12, 17] = 19
+        self.board[13, 18] = 20
         self.board[14, 19] = 21
         self.board[15, 20] = 22
-        self.board[16, 22] = 23
-        self.board[17, 22] = 24
-        self.board[17, 23] = 25
-        self.board[18, 23] = 26
-        self.board[18, 24] = 27
-        self.board[19, 23] = 28
-        self.board[19, 25] = 29
-        self.board[20, 25] = 30
-        self.board[16, 21] = 31
-        self.board[21, 27] = 32
-        self.board[22, 28] = 33
-        self.board[23, 29] = 34
-        self.board[24, 30] = 35
-        self.board[25, 31] = 36
-        self.board[26, 32] = 37
-        self.board[27, 32] = 38
+        self.board[16, 21] = 23
+        self.board[16, 22] = 24
+        self.board[17, 22] = 25
+        self.board[17, 23] = 26
+        self.board[18, 23] = 27
+        self.board[18, 24] = 28
+        self.board[19, 24] = 29
+        self.board[19, 25] = 30
+        self.board[20, 25] = 31
+        self.board[20, 26] = 32
+        self.board[21, 27] = 33
+        self.board[22, 28] = 34
+        self.board[23, 29] = 35
+        self.board[24, 30] = 36
+        self.board[25, 31] = 37
+        self.board[26, 32] = 38
         self.board[27, 33] = 39
         self.board[28, 33] = 40
         self.board[28, 34] = 41
@@ -150,15 +231,86 @@ class Game():
         self.board[50, 53] = 71
 
         self.board += self.board.transpose()
+        print("init_board() done")
 
-    #ToDO Implement function, if player builds settlement, call this function on that tile number
+    def start_location_and_resources(self):
+        for player in self.players:
+            player.brick += 2
+            player.wood += 2
+            player.wheat += 2
+            player.sheep += 2
+            player.stone += 2
+
+        self.assign_vertex(12, self.players[0])
+        self.assign_edge(12, self.players[0])
+        self.assign_vertex(14, self.players[1])
+        self.assign_edge(15, self.players[0])
+        self.assign_vertex(39, self.players[1])
+        self.assign_edge(36, self.players[0])
+        self.assign_vertex(41, self.players[1])
+        self.assign_edge(59, self.players[0])
+
+    def save_game(self):
+        """
+        Performs a create/update call to the backend database to store the models
+        """
+        print("save_game() called")
+
+        # SAVE PLAYERS, TILES, EDGES, AND VERTICES
+        for player in self.players:
+            #print("Saving player %s" % player.name)
+            player.save()
+
+        for tile in self.tiles:
+            #print("Saving tile of resource %s, dice val %d" % (tile.resource_type, tile.dice_value))
+            tile.save()
+
+        for edge in self.edges:
+            edge.save()
+
+        for vertex in self.vertices:
+            vertex.save()
+
+        print("save_game() done")
+
+    def load_game(self):
+        """
+
+        """
+        print("load_game() called")
+
+        self.players = list(catan.Player.objects.all())
+        self.tiles = list(catan.Tile.objects.all())
+        self.edges = list(catan.Edge.objects.all())
+        self.vertices = list(catan.Vertex.objects.all())
+
+        self.init_tiles()
+        self.init_board()
+
+        print("load_game() done")
+
+    def pickle(self):
+        """Pickle the Game object, lazy save"""
+        print("pickle() called")
+        joblib.dump(self.__dict__, "save_game.pkl")
+        print("pickle() done")
+
+    def unpickle(self):
+        """Unpickle Game object, lazy load"""
+        print("unpickle() called")
+        joblib.load("save_game.pkl")
+        print("unpickle() done")
+
+    #ToDO Implement function, if player builds settlement, call this function on that vertex number
     #ToDO Function can also be used to assign tiles initially
-    def assign_tiles(self, vertex_id):
-        player = self.players[self.turn]
-        for i, tile in enumerate(self.tiles):
-            print(i, tile)
+    def assign_vertex(self, vertex_id, player):
+        player.vertex_set.add(self.vertices[vertex_id])
+        self.vertices[vertex_id].available = False
+        #ToDO make neighboring vertices unavailable too
 
-        self.vertices[vertex_id].add(player)
+    def assign_edge(self, edge_id, player):
+        player.edge_set.add(self.edges[edge_id])
+        self.edges[edge_id].available = False
 
     def roll_dice(self):
         return random.randint(1,6) + random.randint(1,6)
@@ -167,10 +319,12 @@ class Game():
         """Simulate the dice roll and allocate resources to all players.
         Allow the current player to build roads, settlements, and cities as desired.
         Will eventually implement trading functionality"""
+        print("start_turn() called")
 
         print("Current player's turn:", self.turn)
-
+        print("Rolling dice...")
         roll = self.roll_dice()
+        print("You rolled a: ", roll)
 
         if roll != 7:
             self.distribute_resources(roll)
@@ -182,7 +336,8 @@ class Game():
         if choice == 'p':
             pass
         elif choice == 'b':
-            self._build()
+            while self._build() != 0:
+                pass
         elif choice == 't':
             print("Not implemented")
         elif choice == 'd':
@@ -190,20 +345,87 @@ class Game():
         else:
             print("Invalid choice, ending your turn to punish you")
 
-
+        print("Ending turn")
 
     def _build(self):
-        print("Not implemented")
+
+        build_flag = 1
+        build_choice = input("What would you like to build? road (r), settlement (s), city (c)")
+
+        # for each option display list of possible build locations as per game rules
+        # check if resources are available for the build
+        # update victory points if needed
+        #ToDO check resources
+        #ToDo make sure it fucking works
+        if build_choice == 'r':
+            player = self.players[self.turn]
+
+            # check player resources are adequate
+            if player.wood < 1 or player.brick < 1:
+                print("Not enough resources to build a road")
+                build_flag = 2
+
+            else:
+                locations = [edge.id for edge in self.edges if edge.available]
+                print("List of possible road locations: ")
+                for location in locations:
+                    print(location, type(location))
+                location_choice = input("Where would you like to build a road?")
+                while location_choice not in locations:
+                    print("Invalid location")
+                    location_choice = input("Where would you like to build a road?")
+                else:
+                    self.assign_edge(int(location_choice))
+
+        elif build_choice == 's':
+            player = self.players[self.turn]
+            locations = [vertex for vertex in self.vertices if vertex.available]
+            print("List of possible settlement locations: ")
+            for location in locations:
+                print(location)
+            location_choice = input("Where would you like to build a settlement?")
+            while location_choice not in locations:
+                print("Invalid location")
+                location_choice = input("Where would you like to build a settlement?")
+            else:
+                self.assign_vertex(int(location_choice))
+
+        elif build_choice == 'c':
+            player = self.players[self.turn]
+            locations = list(player.vertex_set.filter(has_city=False))
+            for location in locations:
+                print(location)
+            location_choice = input("Where would you like to upgrade to a city?")
+            while location_choice not in locations:
+                print("Invalid location")
+                location_choice = input("Where would you like to upgrade to a city?")
+            else:
+                self.vertices[int(location_choice)].has_city = True
+
+        return build_flag
 
     def move_robber(self):
         print("Not implemented")
 
     def distribute_resources(self, roll):
         print("Not implemented")
+        # Get a list of all vertices that have a settlement not null
+        for player in self.players:
+            player_vertices = player.vertex_set.all()
+
+            for vertex in player_vertices:
+                pass
 
 
+
+        # For each vertex, get the player_id from settlement and all tiles that own the vertex
+        # Increment that player_id resource count, if has_city is True, double it
+        # Save
 
 if __name__ == "__main__":
+
+    print(os.getcwd())
+
     resources = [u"brick", u"brick", u"brick",
                  u"wood", u"wood", u"wood", u"wood",
                  u"wheat", u"wheat", u"wheat", u"wheat",
@@ -216,20 +438,20 @@ if __name__ == "__main__":
     sim = Game()
     if not sim.initialized:
         sim.initialize()
-        sim.init_board()
         print(sim.board.shape)
+        sim.pickle()
 
     print("Current turn:", sim.turn)
 
-    #sim.assign_tiles()
-
     while sim.winner == False:
-        #sim.winner = True
+        # sim.winner = True
         if sim.turn > 4:
             sim.turn = 0
         sim.start_turn()
 
         sim.turn += 1
         sim.turn_count += 1
-        _ = input(">>Press Enter for next Turn")
+        _ = input(">>Press Enter for next Turn, or 'X' to exit")
 
+        if _ == "X":
+            exit(0)
