@@ -28,6 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'thezhongfamily-dev.us-east-1.elasticbeanstalk.com',
     'localhost',
+    '127.0.0.1',
     'www.thezhongfamily.com',
 ]
 

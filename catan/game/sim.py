@@ -19,7 +19,6 @@ class Game():
             self.tiles = []
             self.vertices = []
             self.edges = []
-            self.resources = None
             self.winner = False
             self.winning_player = None
             self.initialized = False
@@ -436,6 +435,7 @@ class Game():
 
             else:
                 locations = [edge.id for edge in self.edges if edge.available]
+                locations = [edge.id for edge in self.edges if edge.available]
                 print("List of possible road locations: ")
                 for location in locations:
                     print(location, type(location))
@@ -573,8 +573,6 @@ if __name__ == "__main__":
         print(sim.board.shape)
         sim.pickle()
 
-    print("Current turn:", sim.turn)
-
     while sim.winner == False:
         # sim.winner = True
         if sim.turn > 4:
@@ -585,5 +583,5 @@ if __name__ == "__main__":
         sim.turn_count += 1
         _ = input(">>Press Enter for next Turn, or 'X' to exit")
 
-        if _ == "X":
+        if _ == 'X':
             exit(0)

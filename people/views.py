@@ -19,6 +19,7 @@ def wall(request):
         if form.is_valid() and form.is_bound:
             print("Valid and bound form")
             form.save()
+            return HttpResponseRedirect("/people/wall")
 
     else:
         form = WallPostForm()

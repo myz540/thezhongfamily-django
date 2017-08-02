@@ -51,11 +51,3 @@ class Tile(models.Model):
     def __str__(self):
         return u"I am tile %d and I am a %s tile" % (self.id, self.resource_type)
 
-
-class Resource(models.Model):
-    brick = models.IntegerField()
-    wood = models.IntegerField()
-    wheat = models.IntegerField()
-    sheep = models.IntegerField()
-    stone = models.IntegerField()
-
