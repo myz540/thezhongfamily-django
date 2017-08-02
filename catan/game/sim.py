@@ -381,6 +381,10 @@ class Game():
         else:
             self.move_robber()
 
+        self.display_player(self.players[self.turn])
+
+        self.display_resources(self.players[self.turn])
+
         choice = input("Would you like to build (b), trade(t), buy dev card (d), or pass (p)?")
 
         if choice == 'p':
@@ -404,6 +408,48 @@ class Game():
         self.save_game()
 
         print("start_turn() done")
+
+    def display_tiles(self):
+        """
+        Display current tiles, their dice values, and the resource they provide
+        """
+        print("****************************************")
+        for tile in self.tiles:
+            print("Tile", tile.id, "has dice value:", tile.dice_value, "and provides resource:", tile.resource_type)
+        print("****************************************")
+
+    def display_player(self, player):
+        """
+        Display current player's victory points, roads, and settlements/cities
+        :param player: current player's turn
+        """
+        print("****************************************")
+        print("Player", player.id, "has:")
+        print(player.victory_points, "victory points")
+        print("The following roads: ")
+        for edge in player.edge_set.all():
+            print(edge.id)
+        print("The following settlements/cities")
+        for vertex in player.vertex_set.all():
+            if vertex.has_city:
+                print(vertex.id, "city")
+            else:
+                print(vertex.id, "settlement")
+        print("****************************************")
+
+    def display_resources(self, player):
+        """
+                Display current player's resources
+                :param player: current player's turn
+                """
+        print("****************************************")
+        print("Player", player.id, "has:")
+        print(player.brick, "brick")
+        print(player.wood, "wood")
+        print(player.wheat, "wheat")
+        print(player.sheep, "sheep")
+        print(player.stone, "stone")
+        print("****************************************")
 
     def _build(self):
         """
@@ -434,8 +480,21 @@ class Game():
                 build_flag = 2
 
             else:
-                locations = [edge.id for edge in self.edges if edge.available]
-                locations = [edge.id for edge in self.edges if edge.available]
+                active_v = []
+                for edge in player.edge_set.all():
+                    active_v_ids = np.where(self.board == edge.id)
+                    print(active_v_ids[0][0], active_v_ids[0][1])
+                    active_v.append(active_v_ids[0][0])
+                    active_v.append(active_v_ids[1][0])
+
+                locations = []
+                for vertex_id in active_v:
+                    for edge_id in self.board[vertex_id, :]:
+                        if edge_id != 0 and self.edges[int(edge_id)].available:
+                            locations.append(int(edge_id))
+
+                print(locations, type(locations), type(locations[0]))
+
                 print("List of possible road locations: ")
                 for location in locations:
                     print(location, type(location))
@@ -568,11 +627,20 @@ if __name__ == "__main__":
     print(len(resource_vals), len(resources))
 
     sim = Game()
-    if not sim.initialized:
-        sim.initialize()
-        print(sim.board.shape)
-        sim.pickle()
 
+    choice = input("Start new game (n) or load previous game (l)")
+    while choice not in ('n', 'l'):
+        choice = input("Start new game (n) or load previous game (l)")
+
+    if choice == 'n':
+        sim.initialize()
+
+    elif choice == 'l':
+        sim.load_game()
+        sim.init_board()
+
+    print("********Game starting********")
+    sim.display_tiles()
     while sim.winner == False:
         # sim.winner = True
         if sim.turn > 4:
@@ -585,3 +653,4 @@ if __name__ == "__main__":
 
         if _ == 'X':
             exit(0)
+
