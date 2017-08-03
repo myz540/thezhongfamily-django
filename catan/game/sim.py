@@ -8,9 +8,6 @@ import random
 import numpy as np
 
 
-random.seed = 0
-
-
 class Game():
     def __init__(self, sim=True):
         if sim:
@@ -38,7 +35,7 @@ class Game():
         # create players, edges, vertices, and tiles
         self.create_models()
 
-        print(len(self.players), len(self.tiles), len(self.edges), len(self.vertices))
+        #print(len(self.players), len(self.tiles), len(self.edges), len(self.vertices))
 
         # Assign 6 vertices and 6 edges to each tile
         self.init_tiles()
@@ -255,7 +252,7 @@ class Game():
         self.assign_vertex(14, self.players[1])
         self.assign_edge(15, self.players[1])
         self.assign_vertex(39, self.players[2])
-        self.assign_edge(36, self.players[2])
+        self.assign_edge(50, self.players[2])
         self.assign_vertex(41, self.players[3])
         self.assign_edge(59, self.players[3])
 
@@ -386,6 +383,8 @@ class Game():
         self.display_resources(self.players[self.turn])
 
         choice = input("Would you like to build (b), trade(t), buy dev card (d), or pass (p)?")
+        while choice not in ('b', 't', 'd', 'p'):
+            choice = input("Would you like to build (b), trade(t), buy dev card (d), or pass (p)?")
 
         if choice == 'p':
             pass
@@ -396,8 +395,7 @@ class Game():
             print("Not implemented")
         elif choice == 'd':
             print("Not implemented")
-        else:
-            print("Invalid choice, ending your turn to punish you")
+
 
         if self.players[self.turn].victory_points >= 10:
             self.winner = True
@@ -470,55 +468,105 @@ class Game():
         # for each option display list of possible build locations as per game rules
         # check if resources are available for the build
         # update victory points if needed
-        #ToDo make sure it fucking works
         if build_choice == 'r':
-            player = self.players[self.turn]
-
-            # check player resources are adequate
-            if player.wood < 1 or player.brick < 1:
-                print("Not enough resources to build a road")
-                build_flag = 2
-
-            else:
-                active_v = []
-                for edge in player.edge_set.all():
-                    active_v_ids = np.where(self.board == edge.id)
-                    print(active_v_ids[0][0], active_v_ids[0][1])
-                    active_v.append(active_v_ids[0][0])
-                    active_v.append(active_v_ids[1][0])
-
-                locations = []
-                for vertex_id in active_v:
-                    for edge_id in self.board[vertex_id, :]:
-                        if edge_id != 0 and self.edges[int(edge_id)].available:
-                            locations.append(int(edge_id))
-
-                print(locations, type(locations), type(locations[0]))
-
-                print("List of possible road locations: ")
-                for location in locations:
-                    print(location, type(location))
-                location_choice = int(input("Where would you like to build a road?"))
-                while location_choice not in locations:
-                    print("Invalid location")
-                    location_choice = int(input("Where would you like to build a road?"))
-                # assign edge/road to player
-                self.assign_edge(location_choice, player)
+            build_flag = self._build_road()
 
         elif build_choice == 's':
-            player = self.players[self.turn]
+            build_flag = self._build_settlement()
 
-            # check player resources are adequate
-            if player.brick < 1 or player.wood < 1 or player.wheat < 1 or player.sheep < 1:
-                print("Not enough resources to build a settlement")
-                build_flag = 2
+        elif build_choice == 'c':
+            build_flag = self._build_city()
 
-            # generate list of available vertices
+        elif build_choice == 'p':
+            build_flag = 0
+
+        print("_build() done. Returning with flag", build_flag)
+        return build_flag
+
+    def _build_road(self):
+        """
+        Helper function to build road
+        :return: build_flag
+        """
+        player = self.players[self.turn]
+        build_flag = 1
+
+        # check player resources are adequate
+        if player.wood < 1 or player.brick < 1:
+            print("Not enough resources to build a road")
+            build_flag = 2
+
+        else:
+            active_v = []
+            for edge in player.edge_set.all():
+                # print(edge)
+                active_v_ids = np.where(self.board == edge.id)
+                # print(active_v_ids[0][0], active_v_ids[0][1])
+                active_v.append(active_v_ids[0][0])
+                active_v.append(active_v_ids[1][0])
+
+            locations = []
+            for vertex_id in active_v:
+                for edge_id in self.board[vertex_id, :]:
+                    if edge_id != 0 and self.edges[int(edge_id)].available:
+                        locations.append(int(edge_id))
+
+            # print(locations, type(locations), type(locations[0]))
+            locations = list(set(locations))
+
+            print("List of possible road locations: ")
+            for location in locations:
+                print(location, type(location))
+
+            location_choice = int(input("Where would you like to build a road?"))
+            while location_choice not in locations:
+                print("Invalid location")
+                location_choice = int(input("Where would you like to build a road?"))
+            # assign edge/road to player
+            self.assign_edge(location_choice, player)
+
+        return build_flag
+
+    def _build_settlement(self):
+        """
+        Helper function to build settlements
+        :return: build_flag
+        """
+        player = self.players[self.turn]
+        build_flag = 1
+
+        # check player resources are adequate
+        if player.brick < 1 or player.wood < 1 or player.wheat < 1 or player.sheep < 1:
+            print("Not enough resources to build a settlement")
+            build_flag = 2
+
+        # generate list of available vertices
+        else:
+            active_v = []
+            for edge in player.edge_set.all():
+                print(edge.id)
+                active_v_ids = np.where(self.board == edge.id)
+                print(active_v_ids)
+                active_v.append(active_v_ids[0][0])
+                active_v.append(active_v_ids[1][0])
+
+            active_v = list(set(active_v))
+
+            locations = []
+            for vertex_id in active_v:
+                if self.vertices[vertex_id].available:
+                    locations.append(vertex_id)
+
+            # if no places to build settlement, set build_flag
+            if len(locations) == 0:
+                print("No valid places to build a settlement")
+                build_flag = 3
+
             else:
-                locations = [vertex.id for vertex in self.vertices if vertex.available]
                 print("List of possible settlement locations: ")
                 for location in locations:
                     print(location)
+
                 # prompt user for build location
                 location_choice = int(input("Where would you like to build a settlement?"))
                 while location_choice not in locations:
@@ -528,29 +576,36 @@ class Game():
                 # assign vertex/settlement to player
                 self.assign_vertex(location_choice, player)
 
-        elif build_choice == 'c':
-            player = self.players[self.turn]
-            if player.wheat < 2 or player.stone < 3:
-                print("Not enough resources to build a city")
-                build_flag = 2
+        return build_flag
+
+    def _build_city(self):
+        """
+        Helper function to build city
+        :return: build_flag
+        """
+        player = self.players[self.turn]
+        build_flag = 1
+
+        # check resources
+        if player.wheat < 2 or player.stone < 3:
+            print("Not enough resources to build a city")
+            build_flag = 2
+
+        else:
+            locations = [vertex.id for vertex in player.vertex_set.filter(has_city=False)]
+            for location in locations:
+                print(location)
+
+            location_choice = int(input("Where would you like to upgrade to a city?"))
+            while location_choice not in locations:
+                print("Invalid location")
+                location_choice = input("Where would you like to upgrade to a city?")
 
             else:
-                locations = [vertex.id for vertex in player.vertex_set.filter(has_city=False)]
-                for location in locations:
-                    print(location)
-                location_choice = int(input("Where would you like to upgrade to a city?"))
-                while location_choice not in locations:
-                    print("Invalid location")
-                    location_choice = input("Where would you like to upgrade to a city?")
-                else:
-                    self.vertices[location_choice].has_city = True
-                    player.victory_points += 1
-                    print("Player", player.id, "upgraded settlement", location_choice, "to a city")
+                self.vertices[location_choice].has_city = True
+                player.victory_points += 1
+                print("Player", player.id, "upgraded settlement", location_choice, "to a city")
 
-        elif build_choice == 'p':
-            build_flag = 0
-
-        print("_build() done. Returning with flag", build_flag)
         return build_flag
 
     def move_robber(self):
@@ -616,6 +671,7 @@ class Game():
 if __name__ == "__main__":
 
     print(os.getcwd())
+    random.seed = 0
 
     resources = [u"brick", u"brick", u"brick",
                  u"wood", u"wood", u"wood", u"wood",
@@ -624,7 +680,7 @@ if __name__ == "__main__":
                  u"stone", u"stone", u"stone"]
 
     resource_vals = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-    print(len(resource_vals), len(resources))
+    #print(len(resource_vals), len(resources))
 
     sim = Game()
 
@@ -637,7 +693,15 @@ if __name__ == "__main__":
 
     elif choice == 'l':
         sim.load_game()
-        sim.init_board()
+        for player in sim.players:
+            sim.display_player(player)
+            sim.display_resources(player)
+        for edge in sim.edges:
+            print(edge)
+        for vertex in sim.vertices:
+            print(vertex)
+        for tile in sim.tiles:
+            print(tile)
 
     print("********Game starting********")
     sim.display_tiles()
