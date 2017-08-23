@@ -599,7 +599,7 @@ class Game():
             location_choice = int(input("Where would you like to upgrade to a city?"))
             while location_choice not in locations:
                 print("Invalid location")
-                location_choice = input("Where would you like to upgrade to a city?")
+                location_choice = int(input("Where would you like to upgrade to a city?"))
 
             else:
                 self.vertices[location_choice].has_city = True
@@ -707,7 +707,7 @@ if __name__ == "__main__":
     sim.display_tiles()
     while sim.winner == False:
         # sim.winner = True
-        if sim.turn > 4:
+        if sim.turn > 3:
             sim.turn = 0
         sim.start_turn()
 
