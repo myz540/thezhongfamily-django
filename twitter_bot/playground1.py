@@ -7,8 +7,6 @@ import pandas as pd
 import nltk
 
 
-
-
 consumer_key = "g0qkpuI0GCxfmuWKkOF27URNp"
 consumer_secret = "DUMJeM2zARcfj3FnYj8XTMuYzZOiYlwSXc3w0yXFGxTJuQP23p"
 access_token = "868997754193883136-fuH5kebwOMXV5HZWNEn1uw9i1NXVQHz"
