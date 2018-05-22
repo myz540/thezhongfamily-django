@@ -25,6 +25,7 @@ SECRET_KEY = '0@09wfqp2%)ma&&(1j8gk@_06-afk(+ud-lepihm6&l2a!$jx@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# add allowed hosts
 ALLOWED_HOSTS = [
     'thezhongfamily-dev.us-east-1.elasticbeanstalk.com',
     'localhost',
@@ -34,7 +35,6 @@ ALLOWED_HOSTS = [
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'catan.apps.CatanConfig',
     'people.apps.PeopleConfig',
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -59,10 +60,16 @@ MIDDLEWARE_CLASSES = [
 
 ROOT_URLCONF = 'thezhongfamily.urls'
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ]
+}
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR + '/templates/',],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), os.path.join(BASE_DIR, 'sandbox', 'build')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -121,6 +128,10 @@ USE_L10N = True
 
 USE_TZ = True
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'sandbox', 'build', 'static'),
+    os.path.join(BASE_DIR, 'static'),
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/

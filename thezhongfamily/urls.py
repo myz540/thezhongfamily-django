@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.views.generic import TemplateView
 from . import views
 
 urlpatterns = [
@@ -24,4 +25,6 @@ urlpatterns = [
     url(r'^time/plus/(\d{1,2})/$', view=views.plus_hours),
     url(r'^people/', include('people.urls')),
     url(r'^catan/', include('catan.urls')),
+    url(r'^sandbox/', TemplateView.as_view(template_name='index.html')),
+    url(r'^api-auth/', include('rest_framework.urls'))
 ]
