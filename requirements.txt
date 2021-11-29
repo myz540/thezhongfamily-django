@@ -2,7 +2,7 @@
 appdirs==1.4.3
 awsebcli==3.10.2
 bleach==2.0.0
-blessed==1.17.2
+blessed==1.16.1
 botocore==1.5.65
 cement==2.8.2
 certifi==2017.4.17
@@ -12,7 +12,7 @@ colorama==0.3.7
 dash==0.17.5
 decorator==4.0.11
 django-filter==1.1.0
-django==1.11.28
+django==1.11.13
 djangorestframework==3.8.2
 docker-py==1.7.2
 dockerpty==0.4.1
@@ -53,9 +53,9 @@ packaging==17.1
 pandas==0.20.3
 pandocfilters==1.4.1
 pathspec==0.5.0
-pexpect==4.8.0 ; sys_platform != 'win32'
+pexpect==4.7.0 ; sys_platform != 'win32'
 pickleshare==0.7.4
-pillow==4.2.0
+pillow==6.2.0
 plotly==2.0.11
 prompt-toolkit==1.0.14
 ptyprocess==0.6.0 ; os_name != 'nt'
@@ -73,7 +73,7 @@ simplegeneric==0.8.1
 six==1.10.0
 tabulate==0.7.5
 termcolor==1.1.0
-terminado==0.8.3 ; sys_platform != 'win32'
+terminado==0.8.2 ; sys_platform != 'win32'
 testpath==0.3.1
 tornado==4.5.1
 traitlets==4.3.2
